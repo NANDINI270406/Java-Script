@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campus Events</title>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #fff;
+      --text: #172033;
+      --muted: #68738a;
+      --line: #e5e9f2;
+      --primary: #6558e8;
+      --primary-dark: #5043ce;
+      --green: #17875d;
+      --red: #c43d4c;
+      --shadow: 0 12px 32px rgba(26, 35, 60, .07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        "Segoe UI", sans-serif;
+    }
+
+    .topbar {
+      background: #171b2e;
+      color: white;
+      padding: 16px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand { font-weight: 750; letter-spacing: -.3px; }
+    .brand span { color: #a69eff; }
+    .top-note { color: #c4c8d8; font-size: 13px; }
+
+    .container {
+      width: min(1120px, 92%);
+      margin: 34px auto 60px;
+    }
+
+    .welcome {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 40px);
+      margin: 0 0 8px;
+      letter-spacing: -1.2px;
+    }
+
+    h2 { font-size: 19px; margin: 0 0 18px; }
+    h3 { margin: 0 0 8px; font-size: 17px; }
+    p { margin: 0; }
+    .muted { color: var(--muted); }
+
+    .name-box {
+      display: flex;
+      gap: 8px;
+      width: min(390px, 100%);
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(101, 88, 232, .12);
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 15px;
+      min-height: 42px;
+      background: var(--primary);
+      color: white;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      transition: .15s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .panel, .stat, .event-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 22px 0 28px;
+    }
+
+    .stat { padding: 18px; }
+    .stat-label { color: var(--muted); font-size: 13px; }
+    .stat-value { font-size: 27px; font-weight: 750; margin-top: 5px; }
+    .panel { padding: 22px; margin-bottom: 22px; }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 210px;
+      gap: 10px;
+      width: min(500px, 100%);
+    }
+
+    .event-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+      gap: 14px;
+    }
+
+    .event-card {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      box-shadow: none;
+    }
+
+    .event-card:hover {
+      border-color: #c7c1ff;
+      box-shadow: var(--shadow);
+    }
+
+    .event-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .event-description {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 10px 0 14px;
+    }
+
+    .event-bottom {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border-radius: 99px;
+      padding: 5px 9px;
+      background: #f0efff;
+      color: #5144c7;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .seats { font-size: 13px; font-weight: 700; color: var(--green); }
+    .seats.low { color: #bd7414; }
+    .seats.full { color: var(--red); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field label {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    .message {
+      min-height: 20px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .message.success { color: var(--green); }
+    .message.error { color: var(--red); }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .cancel-button {
+      background: #fff0f1;
+      color: var(--red);
+      padding: 7px 10px;
+      min-height: 34px;
+    }
+
+    .cancel-button:hover { background: #ffe0e3; }
+    .empty { padding: 20px; text-align: center; color: var(--muted); }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #171b2e;
+      color: white;
+      border-radius: 12px;
+      padding: 13px 17px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: .2s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 700px) {
+      .welcome, .section-heading {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .name-box, .filters { width: 100%; }
+      .stats { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+    }
+
+    @media (max-width: 430px) {
+      .name-box { flex-direction: column; }
+      .filters { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">CAMPUS<span>+</span></div>
+    <div class="top-note">Discover. Connect. Participate.</div>
+  </header>
+
+  <main class="container">
+    <div class="welcome">
+      <div>
+        <h1>Campus events</h1>
+        <p class="muted">Find your next experience and save your spot.</p>
+      </div>
+
+      <div class="name-box">
+        <input id="savedName" type="text" placeholder="Your name">
+        <button id="saveNameButton" type="button">Save name</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Events available</div>
+        <div class="stat-value" id="eventCount">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Seats remaining</div>
+        <div class="stat-value" id="seatCount">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Your registrations</div>
+        <div class="stat-value" id="registrationCount">0</div>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <h2>Explore events</h2>
+          <p class="muted">Choose an event to see its details and available seats.</p>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Search events…">
+          <select id="categoryFilter">
+            <option value="">All categories</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="eventGrid" class="event-grid"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Register for an event</h2>
+
+      <form id="registrationForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="studentName">Student name</label>
+            <input id="studentName" required placeholder="e.g. Asha Patel">
+          </div>
+
+          <div class="field">
+            <label for="prn">PRN</label>
+            <input id="prn" required placeholder="Your student PRN">
+          </div>
+
+          <div class="field">
+            <label for="email">Email address</label>
+            <input id="email" type="email" required placeholder="you@college.edu">
+          </div>
+
+          <div class="field">
+            <label for="eventSelect">Select event</label>
+            <select id="eventSelect" required>
+              <option value="">Choose an event</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit">Confirm registration</button>
+        <div id="registrationMessage" class="message" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <h2>Registered students</h2>
+          <p class="muted">Registrations saved in this browser.</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>PRN</th>
+              <th>Email</th>
+              <th>Event</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="registrationTable"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyMessage" class="empty">
+        No registrations yet. Be the first to sign up.
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    $(document).ready(function () {
+      const starterEvents = [
+        {
+          id: "tech-fest",
+          name: "Technology Fest",
+          category: "Technology",
+          date: "2026-11-12",
+          time: "10:00 AM",
+          venue: "Main Auditorium",
+          seats: 40,
+          description: "Explore student projects, workshops, and the latest ideas in technology."
+        },
+        {
+          id: "music-night",
+          name: "Campus Music Night",
+          category: "Music",
+          date: "2026-11-18",
+          time: "6:00 PM",
+          venue: "Open-Air Theatre",
+          seats: 80,
+          description: "Enjoy live performances by talented student musicians."
+        },
+        {
+          id: "art-exhibition",
+          name: "Student Art Exhibition",
+          category: "Arts",
+          date: "2026-11-22",
+          time: "11:00 AM",
+          venue: "Art Gallery",
+          seats: 35,
+          description: "Discover paintings, photography, and creative work from students."
+        },
+        {
+          id: "sports-day",
+          name: "Annual Sports Day",
+          category: "Sports",
+          date: "2026-12-03",
+          time: "9:00 AM",
+          venue: "College Sports Ground",
+          seats: 100,
+          description: "Take part in a day of friendly competition and team spirit."
+        }
+      ];
+
+      const EVENTS_KEY = "campusEvents";
+      const REGISTRATIONS_KEY = "campusRegistrations";
+      const NAME_KEY = "campusSavedName";
+
+      let events = loadFromStorage(EVENTS_KEY, starterEvents);
+      let registrations = loadFromStorage(REGISTRATIONS_KEY, []);
+
+      function loadFromStorage(key, fallback) {
+        try {
+          const storedValue = localStorage.getItem(key);
+          return storedValue ? JSON.parse(storedValue) : fallback;
+        } catch (error) {
+          return fallback;
+        }
+      }
+
+      function saveToStorage(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, function (character) {
+          const characters = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+          };
+          return characters[character];
+        });
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString + "T00:00:00");
+        return date.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        });
+      }
+
+      function getRemainingSeats(event) {
+        const registeredCount = registrations.filter(function (registration) {
+          return registration.eventId === event.id;
+        }).length;
+
+        return Math.max(0, event.seats - registeredCount);
+      }
+
+      function showToast(message) {
+        $("#toast").text(message).addClass("show");
+
+        setTimeout(function () {
+          $("#toast").removeClass("show");
+        }, 2600);
+      }
+
+      function populateCategories() {
+        const categories = [...new Set(events.map(function (event) {
+          return event.category;
+        }))].sort();
+
+        $("#categoryFilter").html(
+          '<option value="">All categories</option>' +
+          categories.map(function (category) {
+            return '<option value="' + escapeHtml(category) + '">' +
+              escapeHtml(category) + '</option>';
+          }).join("")
+        );
+      }
+
+      function populateEventSelect() {
+        const availableEvents = events.filter(function (event) {
+          return getRemainingSeats(event) > 0;
+        });
+
+        $("#eventSelect").html(
+          '<option value="">Choose an event</option>' +
+          availableEvents.map(function (event) {
+            return '<option value="' + escapeHtml(event.id) + '">' +
+              escapeHtml(event.name) + ' (' + getRemainingSeats(event) +
+              ' seats left)</option>';
+          }).join("")
+        );
+      }
+
+      function renderEvents() {
+        const searchTerm = $("#searchInput").val().trim().toLowerCase();
+        const selectedCategory = $("#categoryFilter").val();
+
+        const filteredEvents = events.filter(function (event) {
+          const matchesSearch =
+            event.name.toLowerCase().includes(searchTerm) ||
+            event.category.toLowerCase().includes(searchTerm) ||
+            event.venue.toLowerCase().includes(searchTerm) ||
+            event.description.toLowerCase().includes(searchTerm);
+
+          const matchesCategory =
+            !selectedCategory || event.category === selectedCategory;
+
+          return matchesSearch && matchesCategory;
+        });
+
+        if (filteredEvents.length === 0) {
+          $("#eventGrid").html(
+            '<div class="empty">No events match your search.</div>'
+          );
+          return;
+        }
+
+        const eventCards = filteredEvents.map(function (event) {
+          const remainingSeats = getRemainingSeats(event);
+          let seatClass = "seats";
+
+          if (remainingSeats === 0) {
+            seatClass += " full";
+          } else if (remainingSeats <= 5) {
+            seatClass += " low";
+          }
+
+          const seatText = remainingSeats === 0
+            ? "Fully booked"
+            : remainingSeats + " seats left";
+
+          return `
+            <article class="event-card">
+              <span class="tag">${escapeHtml(event.category)}</span>
+              <h3>${escapeHtml(event.name)}</h3>
+              <div class="event-meta">
+                <div>📅 ${formatDate(event.date)} · ${escapeHtml(event.time)}</div>
+                <div>📍 ${escapeHtml(event.venue)}</div>
+              </div>
+              <p class="event-description">${escapeHtml(event.description)}</p>
+              <div class="event-bottom">
+                <span class="${seatClass}">${seatText}</span>
+                <button
+                  type="button"
+                  class="select-event-button"
+                  data-event-id="${escapeHtml(event.id)}"
+                  ${remainingSeats === 0 ? "disabled" : ""}
+                >
+                  ${remainingSeats === 0 ? "Full" : "Register"}
+                </button>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        $("#eventGrid").html(eventCards);
+      }
+
+      function renderRegistrations() {
+        if (registrations.length === 0) {
+          $("#registrationTable").empty();
+          $("#emptyMessage").show();
+          return;
+        }
+
+        $("#emptyMessage").hide();
+
+        const rows = registrations.map(function (registration) {
+          const event = events.find(function (item) {
+            return item.id === registration.eventId;
+          });
+
+          return `
+            <tr>
+              <td>${escapeHtml(registration.name)}</td>
+              <td>${escapeHtml(registration.prn)}</td>
+              <td>${escapeHtml(registration.email)}</td>
+              <td>${escapeHtml(event ? event.name : "Event unavailable")}</td>
+              <td>${event ? formatDate(event.date) : "—"}</td>
+              <td>
+                <button
+                  type="button"
+                  class="cancel-button"
+                  data-registration-id="${escapeHtml(registration.id)}"
+                >
+                  Cancel
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+        $("#registrationTable").html(rows);
+      }
+
+      function updateStats() {
+        $("#eventCount").text(events.length);
+
+        const totalSeatsRemaining = events.reduce(function (total, event) {
+          return total + getRemainingSeats(event);
+        }, 0);
+
+        $("#seatCount").text(totalSeatsRemaining);
+        $("#registrationCount").text(registrations.length);
+      }
+
+      function renderAll() {
+        populateCategories();
+        populateEventSelect();
+        renderEvents();
+        renderRegistrations();
+        updateStats();
+      }
+
+      $("#savedName").val(localStorage.getItem(NAME_KEY) || "");
+
+      $("#saveNameButton").on("click", function () {
+        const name = $("#savedName").val().trim();
+
+        if (!name) {
+          showToast("Please enter your name.");
+          return;
+        }
+
+        localStorage.setItem(NAME_KEY, name);
+        $("#studentName").val(name);
+        showToast("Name saved.");
+      });
+
+      $("#searchInput, #categoryFilter").on("input change", renderEvents);
+
+      $("#eventGrid").on("click", ".select-event-button", function () {
+        const eventId = $(this).data("event-id");
+        $("#eventSelect").val(eventId);
+        $("#registrationForm")[0].scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      });
+
+      $("#registrationForm").on("submit", function (event) {
+        event.preventDefault();
+
+        const name = $("#studentName").val().trim();
+        const prn = $("#prn").val().trim();
+        const email = $("#email").val().trim();
+        const eventId = $("#eventSelect").val();
+        const selectedEvent = events.find(function (item) {
+          return item.id === eventId;
+        });
+
+        if (!selectedEvent) {
+          $("#registrationMessage")
+            .removeClass("success")
+            .addClass("error")
+            .text("Please select a valid event.");
+          return;
+        }
+
+        const alreadyRegistered = registrations.some(function (registration) {
+          return registration.prn.toLowerCase() === prn.toLowerCase() &&
+            registration.eventId === eventId;
+        });
+
+        if (alreadyRegistered) {
+          $("#registrationMessage")
+            .removeClass("success")
+            .addClass("error")
+            .text("This PRN is already registered for this event.");
+          return;
+        }
+
+        if (getRemainingSeats(selectedEvent) <= 0) {
+          $("#registrationMessage")
+            .removeClass("success")
+            .addClass("error")
+            .text("Sorry, this event is fully booked.");
+          renderAll();
+          return;
+        }
+
+        registrations.push({
+          id: Date.now().toString(),
+          name: name,
+          prn: prn,
+          email: email,
+          eventId: eventId
+        });
+
+        saveToStorage(REGISTRATIONS_KEY, registrations);
+
+        $("#registrationMessage")
+          .removeClass("error")
+          .addClass("success")
+          .text("Registration confirmed for " + selectedEvent.name + "!");
+
+        this.reset();
+        renderAll();
+        showToast("Registration confirmed.");
+      });
+
+      $("#registrationTable").on("click", ".cancel-button", function () {
+        const registrationId = String($(this).data("registration-id"));
+
+        registrations = registrations.filter(function (registration) {
+          return registration.id !== registrationId;
+        });
+
+        saveToStorage(REGISTRATIONS_KEY, registrations);
+        renderAll();
+        showToast("Registration cancelled.");
+      });
+
+      renderAll();
+    });
+  </script>
+</body>
+</html>
